@@ -41,12 +41,20 @@ class NodeJitterBuffer : public ObjectWrap {
 			int span = packet->Get( String::New( "span" ) )->Int32Value();
 			int sequence = packet->Get( String::New( "sequence" ) )->Int32Value();
 
+			// Userdata is optional.
+			int userData = 0;
+			Handle<Value> userDataHandle = packet->Get( String::New( "userData" ) );
+			if( !userDataHandle.IsEmpty() ) {
+				userData = userDataHandle->Int32Value();
+			}
+
 			JitterBufferPacket speexPacket;
 			speexPacket.data = Buffer::Data( data );
 			speexPacket.len = Buffer::Length( data );
 			speexPacket.timestamp = timestamp;
 			speexPacket.span = span;
 			speexPacket.sequence = sequence;
+			speexPacket.user_data = userData;
 
 			// Put copies the data so it's okay to pass a reference to a local variable.
 			NodeJitterBuffer* self = ObjectWrap::Unwrap<NodeJitterBuffer>( args.This() );
@@ -77,6 +85,7 @@ class NodeJitterBuffer : public ObjectWrap {
 				packet->Set( String::NewSymbol( "timestamp" ), Number::New( jitterPacket.timestamp ) );
 				packet->Set( String::NewSymbol( "span" ), Number::New( jitterPacket.span ) );
 				packet->Set( String::NewSymbol( "sequence" ), Number::New( jitterPacket.sequence ) );
+				packet->Set( String::NewSymbol( "userData" ), Number::New( jitterPacket.user_data ) );
 
 				return scope.Close( packet );
 			} else {
