@@ -1,5 +1,5 @@
 
-var jitterbuffer = require('bindings')('node-jitterbuffer')
+var jitterbuffer = require('bindings')('node-jitterbuffer');
 
 console.log( jitterbuffer.JitterBuffer );
 exports.JitterBuffer = jitterbuffer.JitterBuffer;
