@@ -169,5 +169,5 @@ void init(Handle<Object> exports) {
 	NodeJitterBuffer::Init( exports );
 }
 
-NODE_MODULE(node_jitterbuffer, init)
+NODE_MODULE(node_jitterbuffer, Init)
 
