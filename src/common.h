@@ -50,8 +50,6 @@
 		  String::New("Argument " #I " must be a function")));   \
   Local<Function> VAR = Local<Function>::Cast(args[I]);
 
-#endif
-
 #define CREATE_BUFFER( name, data, length ) \
 	Buffer* name ## _slow = Buffer::New( length ); \
 	memcpy(Buffer::Data( name ## _slow ), data, length ); \
@@ -62,3 +60,5 @@
 					->Global() \
 					->Get( String::New("Buffer")) \
 			)->NewInstance( 3, ctorArgs );
+
+#endif
