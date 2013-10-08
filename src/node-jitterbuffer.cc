@@ -165,9 +165,9 @@ class NodeJitterBuffer : public ObjectWrap {
 };
 
 
-void init(Handle<Object> exports) {
+void NodeInit(Handle<Object> exports) {
 	NodeJitterBuffer::Init( exports );
 }
 
-NODE_MODULE(node_jitterbuffer, Init)
+NODE_MODULE(node_jitterbuffer, NodeInit)
 
