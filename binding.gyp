@@ -40,6 +40,7 @@
             'include_dirs': [
                 'deps/speex-1.2rc1/include',
                 'deps/config/speex-1.2rc1/<(OS)/<(target_arch)',
+                "<!(node -e \"require('nan')\")"
             ],
             'sources': [
                 'src/node-jitterbuffer.cc',

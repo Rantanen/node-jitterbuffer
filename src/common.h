@@ -23,8 +23,8 @@
 #endif
 
 #define THROW_TYPE_ERROR( MSG ) \
-	return ThrowException(Exception::TypeError( \
-		String::New( MSG )));
+	NanThrowTypeError( MSG ); \
+	NanReturnUndefined();
 
 #define CHECK_ARG(I, CHECK, DO_TRUE, DO_FALSE) \
 	if ( args.Length() <= (I) || !args[I]->CHECK ) { DO_FALSE; } else { DO_TRUE; }
@@ -36,29 +36,21 @@
 	REQUIRE_ARG( I, IsObject() ) \
 	Local<Object> VAR = Local<Object>::Cast( args[I] )
 
-#define OPT_INT_ARG(I, VAR, DEFAULT) \
-	int VAR; \
-	CHECK_ARG( I, IsNumber(), VAR = args[I]->Int32Value(), VAR = DEFAULT )
-
 #define REQ_INT_ARG(I, VAR) \
 	REQUIRE_ARG( I, IsNumber() ) \
 	int VAR = args[I]->Int32Value();
 
+#define OPT_INT_ARG(I, VAR, DEFAULT) \
+	int VAR; \
+	CHECK_ARG( I, IsNumber(), VAR = args[I]->Int32Value(), VAR = DEFAULT )
+
 #define REQ_FUN_ARG(I, VAR)                                      \
-  if (args.Length() <= (I) || !args[I]->IsFunction())            \
-		return ThrowException(Exception::TypeError(              \
-		  String::New("Argument " #I " must be a function")));   \
-  Local<Function> VAR = Local<Function>::Cast(args[I]);
+	if (args.Length() <= (I) || !args[I]->IsFunction())            \
+		NanThrowTypeError("Argument " #I " must be a function");   \
+		NanReturnUndefined(); \
+		Local<Function> VAR = Local<Function>::Cast(args[I]);
 
 #define CREATE_BUFFER( name, data, length ) \
-	Buffer* name ## _slow = Buffer::New( length ); \
-	memcpy(Buffer::Data( name ## _slow ), data, length ); \
-	Local<Object> name; \
-	Handle<Value> ctorArgs[3] = { name ## _slow->handle_, Integer::New( length ), Integer::New(0) }; \
-	name = Local<Function>::Cast( \
-				Context::GetCurrent() \
-					->Global() \
-					->Get( String::New("Buffer")) \
-			)->NewInstance( 3, ctorArgs );
+	Local<Object> name = NanNewBufferHandle(reinterpret_cast<char*>(data), length);
 
 #endif

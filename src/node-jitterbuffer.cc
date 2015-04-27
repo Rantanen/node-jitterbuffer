@@ -2,8 +2,10 @@
 #include <v8.h>
 #include <node.h>
 #include <node_buffer.h>
+#include <node_object_wrap.h>
 #include "speex/speex_jitter.h"
 #include "common.h"
+#include <nan.h>
 
 #include <string.h>
 
@@ -29,21 +31,20 @@ class NodeJitterBuffer : public ObjectWrap {
 			}
 		}
 
-
-		static Handle<Value> Put( const Arguments& args ) {
-			HandleScope scope;
+		static NAN_METHOD(Put) {
+			NanScope();
 
 			REQ_OBJ_ARG( 0, packet );
 
 			Local<Object> data = Local<Object>::Cast(
-					packet->Get( String::New( "data" ) ) );
-			int timestamp = packet->Get( String::New( "timestamp" ) )->Int32Value();
-			int span = packet->Get( String::New( "span" ) )->Int32Value();
-			int sequence = packet->Get( String::New( "sequence" ) )->Int32Value();
+					packet->Get( NanNew<String>( "data" ) ) );
+			int timestamp = packet->Get( NanNew<String>( "timestamp" ) )->Int32Value();
+			int span = packet->Get( NanNew<String>( "span" ) )->Int32Value();
+			int sequence = packet->Get( NanNew<String>( "sequence" ) )->Int32Value();
 
 			// Userdata is optional.
 			int userData = 0;
-			Handle<Value> userDataHandle = packet->Get( String::New( "userData" ) );
+			Handle<Value> userDataHandle = packet->Get( NanNew<String>( "userData" ) );
 			if( !userDataHandle.IsEmpty() ) {
 				userData = userDataHandle->Int32Value();
 			}
@@ -60,11 +61,11 @@ class NodeJitterBuffer : public ObjectWrap {
 			NodeJitterBuffer* self = ObjectWrap::Unwrap<NodeJitterBuffer>( args.This() );
 			jitter_buffer_put( self->jitterBuffer, &speexPacket );
 
-			return scope.Close( Undefined() );
+			NanReturnUndefined();
 		}
 
-		static Handle<Value> Get( const Arguments& args ) {
-			HandleScope scope;
+		static NAN_METHOD(Get) {
+			NanScope();
 
 			REQ_INT_ARG( 0, desiredSpan );
 
@@ -80,55 +81,54 @@ class NodeJitterBuffer : public ObjectWrap {
 
 				CREATE_BUFFER( data, jitterPacket.data, jitterPacket.len );
 
-				Local<Object> packet = Object::New();
-				packet->Set( String::NewSymbol( "data" ), data );
-				packet->Set( String::NewSymbol( "timestamp" ), Number::New( jitterPacket.timestamp ) );
-				packet->Set( String::NewSymbol( "span" ), Number::New( jitterPacket.span ) );
-				packet->Set( String::NewSymbol( "sequence" ), Number::New( jitterPacket.sequence ) );
-				packet->Set( String::NewSymbol( "userData" ), Number::New( jitterPacket.user_data ) );
+				Local<Object> packet = NanNew<Object>();
+				packet->Set( NanNew<String>( "data" ), data );
+				packet->Set( NanNew<String>( "timestamp" ), NanNew<Number>( jitterPacket.timestamp ) );
+				packet->Set( NanNew<String>( "span" ), NanNew<Number>( jitterPacket.span ) );
+				packet->Set( NanNew<String>( "sequence" ), NanNew<Number>( jitterPacket.sequence ) );
+				packet->Set( NanNew<String>( "userData" ), NanNew<Number>( jitterPacket.user_data ) );
 
-				return scope.Close( packet );
+				NanReturnValue( packet );
 			} else {
-				return scope.Close( Number::New( returnValue ) );
+				NanReturnValue( NanNew<Number>( returnValue ) );
 			}
 		}
 
-
-		static Handle<Value> Tick( const Arguments& args ) {
-			HandleScope scope;
+		static NAN_METHOD(Tick) {
+			NanScope();
 			NodeJitterBuffer* self = ObjectWrap::Unwrap<NodeJitterBuffer>( args.This() );
 			jitter_buffer_tick( self->jitterBuffer );
 
-			return scope.Close( Undefined() );
+			NanReturnUndefined();
 		}
 
-		static Handle<Value> GetMargin( const Arguments& args ) {
-			HandleScope scope;
+		static NAN_METHOD(GetMargin) {
+			NanScope();
 			NodeJitterBuffer* self = ObjectWrap::Unwrap<NodeJitterBuffer>( args.This() );
 
 			int margin;
 			jitter_buffer_ctl( self->jitterBuffer, JITTER_BUFFER_GET_MARGIN, &margin );
 
-			return scope.Close( Number::New( margin ) );
+			NanReturnValue( NanNew<Number>( margin ) );
 		}
 
-		static Handle<Value> SetMargin( const Arguments& args ) {
-			HandleScope scope;
+		static NAN_METHOD(SetMargin) {
+			NanScope();
 
 			REQ_INT_ARG( 0, margin );
 
 			NodeJitterBuffer* self = ObjectWrap::Unwrap<NodeJitterBuffer>( args.This() );
 			jitter_buffer_ctl( self->jitterBuffer, JITTER_BUFFER_SET_MARGIN, &margin );
 
-			return scope.Close( Number::New( margin ) );
+			NanReturnValue( NanNew<Number>( margin ) );
 		}
 
-		static Handle<Value> New(const Arguments& args) {
-			HandleScope scope;
+		static NAN_METHOD(New) {
+			NanScope();
 
 			if( !args.IsConstructCall()) {
-				return ThrowException(Exception::TypeError(
-							String::New("Use the new operator to construct the NodeJitterBuffer.")));
+				NanThrowTypeError("Use the new operator to construct the NodeJitterBuffer.");
+				NanReturnUndefined();
 			}
 
 			OPT_INT_ARG(0, stepSize, 10);
@@ -136,31 +136,30 @@ class NodeJitterBuffer : public ObjectWrap {
 			NodeJitterBuffer* encoder = new NodeJitterBuffer( stepSize );
 
 			encoder->Wrap( args.This() );
-			return scope.Close( args.This() );
+			NanReturnValue( args.This() );
 		}
 
 		static void Init(Handle<Object> exports) {
-			Local<FunctionTemplate> tpl = FunctionTemplate::New(New);
-			tpl->SetClassName(String::NewSymbol("JitterBuffer"));
+			Local<FunctionTemplate> tpl = NanNew<FunctionTemplate>(New);
+			tpl->SetClassName(NanNew<String>("JitterBuffer"));
 			tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
-			tpl->PrototypeTemplate()->Set( String::NewSymbol("put"),
-					FunctionTemplate::New( Put )->GetFunction() );
+			tpl->PrototypeTemplate()->Set( NanNew<String>("put"),
+				NanNew<FunctionTemplate>( Put )->GetFunction() );
 
-			tpl->PrototypeTemplate()->Set( String::NewSymbol("get"),
-					FunctionTemplate::New( Get )->GetFunction() );
+			tpl->PrototypeTemplate()->Set( NanNew<String>("get"),
+				NanNew<FunctionTemplate>( Get )->GetFunction() );
 
-			tpl->PrototypeTemplate()->Set( String::NewSymbol("tick"),
-					FunctionTemplate::New( Tick )->GetFunction() );
+			tpl->PrototypeTemplate()->Set( NanNew<String>("tick"),
+				NanNew<FunctionTemplate>( Tick )->GetFunction() );
 
-			tpl->PrototypeTemplate()->Set( String::NewSymbol("setMargin"),
-					FunctionTemplate::New( SetMargin )->GetFunction() );
+			tpl->PrototypeTemplate()->Set( NanNew<String>("setMargin"),
+				NanNew<FunctionTemplate>( SetMargin )->GetFunction() );
 
-			tpl->PrototypeTemplate()->Set( String::NewSymbol("getMargin"),
-					FunctionTemplate::New( GetMargin )->GetFunction() );
+			tpl->PrototypeTemplate()->Set( NanNew<String>("getMargin"),
+				NanNew<FunctionTemplate>( GetMargin )->GetFunction() );
 
-			Persistent<Function> constructor = Persistent<Function>::New(tpl->GetFunction());
-			exports->Set(String::NewSymbol("JitterBuffer"), constructor);
+			exports->Set(NanNew<String>("JitterBuffer"), tpl->GetFunction());
 		}
 };
 
@@ -170,4 +169,3 @@ void NodeInit(Handle<Object> exports) {
 }
 
 NODE_MODULE(node_jitterbuffer, NodeInit)
-
