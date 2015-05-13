@@ -1,7 +1,6 @@
 
 var jitterbuffer = require('bindings')('node-jitterbuffer');
 
-console.log( jitterbuffer.JitterBuffer );
 exports.JitterBuffer = jitterbuffer.JitterBuffer;
 
 // Following error codes are for get()
