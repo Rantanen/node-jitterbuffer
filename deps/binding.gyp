@@ -65,6 +65,7 @@
             'defines': [
                 'PIC',
                 'HAVE_CONFIG_H',
+                '_USE_MATH_DEFINES',
             ]
         }
     ]

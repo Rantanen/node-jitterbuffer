@@ -24,6 +24,7 @@ Platform support
 Supported platforms:
 - Linux x64
 - Darwin x64
+- Windows x64
 
 Add new supported platforms by running ./configure in deps/speex-1.2rc1 and
 copying the following files:
