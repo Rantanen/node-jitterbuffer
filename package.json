@@ -1,7 +1,7 @@
 {
   "name": "jitterbuffer",
   "description": "NodeJS binding to Speex Jitter Buffer",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "author": "Mikko Rantanen <jubjub@jubjubnest.net>",
   "homepage": "https://github.com/Rantanen/node-jitterbuffer",
   "bugs": "https://github.com/Rantanen/node-jitterbuffer/issues",
@@ -13,7 +13,8 @@
   "//": "Platform limitations is due to lack of config.h files. See README.md for more information.",
   "os": [
     "linux",
-    "darwin"
+    "darwin",
+    "win32"
   ],
   "cpu": [
     "x64"
