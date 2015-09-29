@@ -32,19 +32,18 @@ class NodeJitterBuffer : public ObjectWrap {
 		}
 
 		static NAN_METHOD(Put) {
-			NanScope();
 
 			REQ_OBJ_ARG( 0, packet );
 
 			Local<Object> data = Local<Object>::Cast(
-					packet->Get( NanNew<String>( "data" ) ) );
-			int timestamp = packet->Get( NanNew<String>( "timestamp" ) )->Int32Value();
-			int span = packet->Get( NanNew<String>( "span" ) )->Int32Value();
-			int sequence = packet->Get( NanNew<String>( "sequence" ) )->Int32Value();
+					packet->Get( Nan::New<String>( "data" ).ToLocalChecked() ) );
+			int timestamp = packet->Get( Nan::New<String>( "timestamp" ).ToLocalChecked() )->Int32Value();
+			int span = packet->Get( Nan::New<String>( "span" ).ToLocalChecked() )->Int32Value();
+			int sequence = packet->Get( Nan::New<String>( "sequence" ).ToLocalChecked() )->Int32Value();
 
 			// Userdata is optional.
 			int userData = 0;
-			Handle<Value> userDataHandle = packet->Get( NanNew<String>( "userData" ) );
+			Handle<Value> userDataHandle = packet->Get( Nan::New<String>( "userData" ).ToLocalChecked() );
 			if( !userDataHandle.IsEmpty() ) {
 				userData = userDataHandle->Int32Value();
 			}
@@ -58,14 +57,11 @@ class NodeJitterBuffer : public ObjectWrap {
 			speexPacket.user_data = userData;
 
 			// Put copies the data so it's okay to pass a reference to a local variable.
-			NodeJitterBuffer* self = ObjectWrap::Unwrap<NodeJitterBuffer>( args.This() );
+			NodeJitterBuffer* self = ObjectWrap::Unwrap<NodeJitterBuffer>( info.This() );
 			jitter_buffer_put( self->jitterBuffer, &speexPacket );
-
-			NanReturnUndefined();
 		}
 
 		static NAN_METHOD(Get) {
-			NanScope();
 
 			REQ_INT_ARG( 0, desiredSpan );
 
@@ -75,91 +71,93 @@ class NodeJitterBuffer : public ObjectWrap {
 			jitterPacket.len = 4096;
 			spx_int32_t start_offset = 0;
 
-			NodeJitterBuffer* self = ObjectWrap::Unwrap<NodeJitterBuffer>( args.This() );
+			NodeJitterBuffer* self = ObjectWrap::Unwrap<NodeJitterBuffer>( info.This() );
 			int returnValue = jitter_buffer_get( self->jitterBuffer, &jitterPacket, desiredSpan, &start_offset );
 			if( returnValue == JITTER_BUFFER_OK ) {
 
 				CREATE_BUFFER( data, jitterPacket.data, jitterPacket.len );
 
-				Local<Object> packet = NanNew<Object>();
-				packet->Set( NanNew<String>( "data" ), data );
-				packet->Set( NanNew<String>( "timestamp" ), NanNew<Number>( jitterPacket.timestamp ) );
-				packet->Set( NanNew<String>( "span" ), NanNew<Number>( jitterPacket.span ) );
-				packet->Set( NanNew<String>( "sequence" ), NanNew<Number>( jitterPacket.sequence ) );
-				packet->Set( NanNew<String>( "userData" ), NanNew<Number>( jitterPacket.user_data ) );
+				Local<Object> packet = Nan::New<Object>();
+				packet->Set( Nan::New<String>( "data" ).ToLocalChecked(), data );
+				packet->Set( Nan::New<String>( "timestamp" ).ToLocalChecked(), Nan::New<Number>( jitterPacket.timestamp ) );
+				packet->Set( Nan::New<String>( "span" ).ToLocalChecked(), Nan::New<Number>( jitterPacket.span ) );
+				packet->Set( Nan::New<String>( "sequence" ).ToLocalChecked(), Nan::New<Number>( jitterPacket.sequence ) );
+				packet->Set( Nan::New<String>( "userData" ).ToLocalChecked(), Nan::New<Number>( jitterPacket.user_data ) );
 
-				NanReturnValue( packet );
+				info.GetReturnValue().Set( packet );
 			} else {
-				NanReturnValue( NanNew<Number>( returnValue ) );
+				info.GetReturnValue().Set( Nan::New<Number>( returnValue ) );
 			}
 		}
 
 		static NAN_METHOD(Tick) {
-			NanScope();
-			NodeJitterBuffer* self = ObjectWrap::Unwrap<NodeJitterBuffer>( args.This() );
+
+			NodeJitterBuffer* self = ObjectWrap::Unwrap<NodeJitterBuffer>( info.This() );
 			jitter_buffer_tick( self->jitterBuffer );
 
-			NanReturnUndefined();
 		}
 
 		static NAN_METHOD(GetMargin) {
-			NanScope();
-			NodeJitterBuffer* self = ObjectWrap::Unwrap<NodeJitterBuffer>( args.This() );
+			NodeJitterBuffer* self = ObjectWrap::Unwrap<NodeJitterBuffer>( info.This() );
 
 			int margin;
 			jitter_buffer_ctl( self->jitterBuffer, JITTER_BUFFER_GET_MARGIN, &margin );
 
-			NanReturnValue( NanNew<Number>( margin ) );
+			info.GetReturnValue().Set( Nan::New<Number>( margin ) );
 		}
 
 		static NAN_METHOD(SetMargin) {
-			NanScope();
 
 			REQ_INT_ARG( 0, margin );
 
-			NodeJitterBuffer* self = ObjectWrap::Unwrap<NodeJitterBuffer>( args.This() );
+			NodeJitterBuffer* self = ObjectWrap::Unwrap<NodeJitterBuffer>( info.This() );
 			jitter_buffer_ctl( self->jitterBuffer, JITTER_BUFFER_SET_MARGIN, &margin );
 
-			NanReturnValue( NanNew<Number>( margin ) );
+			info.GetReturnValue().Set( Nan::New<Number>( margin ) );
 		}
 
 		static NAN_METHOD(New) {
-			NanScope();
 
-			if( !args.IsConstructCall()) {
-				NanThrowTypeError("Use the new operator to construct the NodeJitterBuffer.");
-				NanReturnUndefined();
+			if( !info.IsConstructCall()) {
+				return Nan::ThrowTypeError("Use the new operator to construct the NodeJitterBuffer.");
 			}
 
 			OPT_INT_ARG(0, stepSize, 10);
 
 			NodeJitterBuffer* encoder = new NodeJitterBuffer( stepSize );
 
-			encoder->Wrap( args.This() );
-			NanReturnValue( args.This() );
+			encoder->Wrap( info.This() );
+			info.GetReturnValue().Set( info.This() );
 		}
 
 		static void Init(Handle<Object> exports) {
-			Local<FunctionTemplate> tpl = NanNew<FunctionTemplate>(New);
-			tpl->SetClassName(NanNew<String>("JitterBuffer"));
+			Local<FunctionTemplate> tpl = Nan::New<FunctionTemplate>(New);
+			tpl->SetClassName(Nan::New<String>("JitterBuffer").ToLocalChecked());
 			tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
-			tpl->PrototypeTemplate()->Set( NanNew<String>("put"),
-				NanNew<FunctionTemplate>( Put )->GetFunction() );
+			tpl->PrototypeTemplate()->Set( 
+				Nan::New<String>("put").ToLocalChecked(),
+				Nan::New<FunctionTemplate>( Put )->GetFunction() );
 
-			tpl->PrototypeTemplate()->Set( NanNew<String>("get"),
-				NanNew<FunctionTemplate>( Get )->GetFunction() );
+			tpl->PrototypeTemplate()->Set( 
+				Nan::New<String>("get").ToLocalChecked(),
+				Nan::New<FunctionTemplate>( Get )->GetFunction() );
 
-			tpl->PrototypeTemplate()->Set( NanNew<String>("tick"),
-				NanNew<FunctionTemplate>( Tick )->GetFunction() );
+			tpl->PrototypeTemplate()->Set( 
+				Nan::New<String>("tick").ToLocalChecked(),
+				Nan::New<FunctionTemplate>( Tick )->GetFunction() );
 
-			tpl->PrototypeTemplate()->Set( NanNew<String>("setMargin"),
-				NanNew<FunctionTemplate>( SetMargin )->GetFunction() );
+			tpl->PrototypeTemplate()->Set( 
+				Nan::New<String>("setMargin").ToLocalChecked(),
+				Nan::New<FunctionTemplate>( SetMargin )->GetFunction() );
 
-			tpl->PrototypeTemplate()->Set( NanNew<String>("getMargin"),
-				NanNew<FunctionTemplate>( GetMargin )->GetFunction() );
+			tpl->PrototypeTemplate()->Set( 
+				Nan::New<String>("getMargin").ToLocalChecked(),
+				Nan::New<FunctionTemplate>( GetMargin )->GetFunction() );
 
-			exports->Set(NanNew<String>("JitterBuffer"), tpl->GetFunction());
+			exports->Set(
+				Nan::New<String>("JitterBuffer").ToLocalChecked(), 
+				tpl->GetFunction());
 		}
 };
 
