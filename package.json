@@ -1,7 +1,7 @@
 {
   "name": "jitterbuffer",
   "description": "NodeJS binding to Speex Jitter Buffer",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "author": "Mikko Rantanen <jubjub@jubjubnest.net>",
   "homepage": "https://github.com/Rantanen/node-jitterbuffer",
   "bugs": "https://github.com/Rantanen/node-jitterbuffer/issues",
@@ -24,6 +24,6 @@
   },
   "dependencies": {
     "bindings": "~1.2.1",
-    "nan": "~2.0.0"
+    "nan": "~2.3.0"
   }
 }
