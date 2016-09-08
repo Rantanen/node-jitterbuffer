@@ -37,3 +37,5 @@ the existing platforms for an example.
 
 Use the following flags: --enable-static --disable-shared --with-pic
 
+Add the new platform/architecture to package.json to enable `npm install`.
+
