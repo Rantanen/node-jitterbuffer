@@ -32,8 +32,7 @@ copying the following files:
 - config.h
 - include/speex/speex_config_types.h
 
-to `deps/config/celt-0.7.1/<os>/<arch>` maintaining the relative path. See
-the existing platforms for an example.
+to `deps/config/speex-1.2rc1/<os>/<arch>`. With `config.h` going to the root and the `speex_config_types.h` going to the `speex` subfolder. See the existing linux configurations for an example.
 
 Use the following flags: --enable-static --disable-shared --with-pic
 
