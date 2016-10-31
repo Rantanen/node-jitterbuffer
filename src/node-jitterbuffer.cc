@@ -36,14 +36,14 @@ class NodeJitterBuffer : public ObjectWrap {
 			REQ_OBJ_ARG( 0, packet );
 
 			Local<Object> data = Local<Object>::Cast(
-					packet->Get( Nan::New<String>( "data" ).ToLocalChecked() ) );
-			int timestamp = packet->Get( Nan::New<String>( "timestamp" ).ToLocalChecked() )->Int32Value();
-			int span = packet->Get( Nan::New<String>( "span" ).ToLocalChecked() )->Int32Value();
-			int sequence = packet->Get( Nan::New<String>( "sequence" ).ToLocalChecked() )->Int32Value();
+					packet->Get( Nan::New( "data" ).ToLocalChecked() ) );
+			int timestamp = packet->Get( Nan::New( "timestamp" ).ToLocalChecked() )->Int32Value();
+			int span = packet->Get( Nan::New( "span" ).ToLocalChecked() )->Int32Value();
+			int sequence = packet->Get( Nan::New( "sequence" ).ToLocalChecked() )->Int32Value();
 
 			// Userdata is optional.
 			int userData = 0;
-			Handle<Value> userDataHandle = packet->Get( Nan::New<String>( "userData" ).ToLocalChecked() );
+			Handle<Value> userDataHandle = packet->Get( Nan::New( "userData" ).ToLocalChecked() );
 			if( !userDataHandle.IsEmpty() ) {
 				userData = userDataHandle->Int32Value();
 			}
@@ -78,11 +78,11 @@ class NodeJitterBuffer : public ObjectWrap {
 				CREATE_BUFFER( data, jitterPacket.data, jitterPacket.len );
 
 				Local<Object> packet = Nan::New<Object>();
-				packet->Set( Nan::New<String>( "data" ).ToLocalChecked(), data );
-				packet->Set( Nan::New<String>( "timestamp" ).ToLocalChecked(), Nan::New<Number>( jitterPacket.timestamp ) );
-				packet->Set( Nan::New<String>( "span" ).ToLocalChecked(), Nan::New<Number>( jitterPacket.span ) );
-				packet->Set( Nan::New<String>( "sequence" ).ToLocalChecked(), Nan::New<Number>( jitterPacket.sequence ) );
-				packet->Set( Nan::New<String>( "userData" ).ToLocalChecked(), Nan::New<Number>( jitterPacket.user_data ) );
+				packet->Set( Nan::New( "data" ).ToLocalChecked(), data );
+				packet->Set( Nan::New( "timestamp" ).ToLocalChecked(), Nan::New<Number>( jitterPacket.timestamp ) );
+				packet->Set( Nan::New( "span" ).ToLocalChecked(), Nan::New<Number>( jitterPacket.span ) );
+				packet->Set( Nan::New( "sequence" ).ToLocalChecked(), Nan::New<Number>( jitterPacket.sequence ) );
+				packet->Set( Nan::New( "userData" ).ToLocalChecked(), Nan::New<Number>( jitterPacket.user_data ) );
 
 				info.GetReturnValue().Set( packet );
 			} else {
@@ -131,32 +131,20 @@ class NodeJitterBuffer : public ObjectWrap {
 		}
 
 		static void Init(Handle<Object> exports) {
+			Nan::HandleScope scope;
+
 			Local<FunctionTemplate> tpl = Nan::New<FunctionTemplate>(New);
-			tpl->SetClassName(Nan::New<String>("JitterBuffer").ToLocalChecked());
+			tpl->SetClassName(Nan::New("JitterBuffer").ToLocalChecked());
 			tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
-			tpl->PrototypeTemplate()->Set( 
-				Nan::New<String>("put").ToLocalChecked(),
-				Nan::New<FunctionTemplate>( Put )->GetFunction() );
-
-			tpl->PrototypeTemplate()->Set( 
-				Nan::New<String>("get").ToLocalChecked(),
-				Nan::New<FunctionTemplate>( Get )->GetFunction() );
-
-			tpl->PrototypeTemplate()->Set( 
-				Nan::New<String>("tick").ToLocalChecked(),
-				Nan::New<FunctionTemplate>( Tick )->GetFunction() );
-
-			tpl->PrototypeTemplate()->Set( 
-				Nan::New<String>("setMargin").ToLocalChecked(),
-				Nan::New<FunctionTemplate>( SetMargin )->GetFunction() );
-
-			tpl->PrototypeTemplate()->Set( 
-				Nan::New<String>("getMargin").ToLocalChecked(),
-				Nan::New<FunctionTemplate>( GetMargin )->GetFunction() );
+			Nan::SetPrototypeMethod( tpl, "put", Put );
+			Nan::SetPrototypeMethod( tpl, "get", Get );
+			Nan::SetPrototypeMethod( tpl, "tick", Tick );
+			Nan::SetPrototypeMethod( tpl, "setMargin", SetMargin );
+			Nan::SetPrototypeMethod( tpl, "getMargin", GetMargin );
 
 			exports->Set(
-				Nan::New<String>("JitterBuffer").ToLocalChecked(), 
+				Nan::New("JitterBuffer").ToLocalChecked(), 
 				tpl->GetFunction());
 		}
 };
