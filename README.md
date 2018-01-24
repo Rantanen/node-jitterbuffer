@@ -22,7 +22,7 @@ Platform support
 ----------------
 
 Supported platforms:
-- Linux x64
+- Linux x64, arm, ia32
 - Darwin x64
 - Windows x64
 
