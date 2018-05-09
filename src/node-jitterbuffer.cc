@@ -24,7 +24,6 @@ class NodeJitterBuffer : public ObjectWrap {
 		}
 
 		~NodeJitterBuffer() {
-			fprintf( stderr, "\nDestroyer\n\n" );
 			if( jitterBuffer != NULL ) {
 				jitter_buffer_destroy( jitterBuffer );
 				jitterBuffer = NULL;
